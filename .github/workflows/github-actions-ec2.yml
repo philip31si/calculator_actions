@@ -1,5 +1,6 @@
 name: Push-to-EC2
 
+# Trigger deployment only on push to main branch
 on:
   push:
     branches:
@@ -14,7 +15,7 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Deploy to Server
+      - name: Deploy to Server 1
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -22,7 +23,7 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
 
-      - name: Executing remote ssh commands
+      - name: Executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_DNS }}
@@ -30,17 +31,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo apt-get -y update
-              sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-proxy-html libxml2-dev
-              cd /path/to/deployed/files  # Replace with actual path
-              pip3 install -r requirements.txt
-              pkill gunicorn || true  # Stop any running Gunicorn processes
-              gunicorn --bind 127.0.0.1:5000 app:app --daemon
-              sudo tee /etc/apache2/sites-available/000-default.conf <<EOL
-              <VirtualHost *:80>
-              ServerName your-ec2-public-dns
-              ProxyPreserveHost On
-              ProxyPass / http://127.0.0.1:5000/
-              ProxyPassReverse / http://127.0.0.1:5000/
-             </VirtualHost>
-             EOL
-            sudo systemctl restart apache2
+            sudo apt-get install -y apache2
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            cd home
+            sudo mv * /var/www/html
