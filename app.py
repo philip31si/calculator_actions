@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-# API endpoint to handle calculator operations
+# API endpoint 
 @app.route('/calculate', methods=['POST'])
 def calculate():
     data = request.get_json()
@@ -24,7 +24,7 @@ def calculate():
     except ValueError:
         return jsonify({'error': 'Invalid number format'}), 400
 
-    # Perform the operation
+    # To Perform the operations
     result = None
     if operation == 'add':
         result = num1 + num2
