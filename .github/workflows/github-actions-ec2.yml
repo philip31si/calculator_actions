@@ -31,8 +31,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo apt-get -y update
-            sudo apt-get install -y apache2
+            sudo apt-get install -y apache2 python3 python3-pip
             sudo systemctl start apache2
             sudo systemctl enable apache2
-            cd home
+            cd /home
             sudo mv * /var/www/html
+            cd /var/www/html
+            if [ -f "requirements.txt" ]; then
+              sudo pip3 install -r requirements.txt
+            fi
+
