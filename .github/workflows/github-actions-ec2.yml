@@ -30,18 +30,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo apt-get -y update
-            sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-proxy-html libxml2-dev
-            cd /path/to/deployed/files  # Replace with the correct path
-            pip3 install -r requirements.txt
-            gunicorn --bind 0.0.0.0:5000 app:app --daemon
-            sudo a2enmod proxy
-            sudo a2enmod proxy_http
-            sudo tee /etc/apache2/sites-available/000-default.conf <<EOL
-            <VirtualHost *:80>
-                ServerName your-domain-or-ip
-                ProxyPreserveHost On
-                ProxyPass / http://127.0.0.1:5000/
-                ProxyPassReverse / http://127.0.0.1:5000/
-            </VirtualHost>
-            EOL
+              sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-proxy-html libxml2-dev
+              cd /path/to/deployed/files  # Replace with actual path
+              pip3 install -r requirements.txt
+              pkill gunicorn || true  # Stop any running Gunicorn processes
+              gunicorn --bind 127.0.0.1:5000 app:app --daemon
+              sudo tee /etc/apache2/sites-available/000-default.conf <<EOL
+              <VirtualHost *:80>
+              ServerName your-ec2-public-dns
+              ProxyPreserveHost On
+              ProxyPass / http://127.0.0.1:5000/
+              ProxyPassReverse / http://127.0.0.1:5000/
+             </VirtualHost>
+             EOL
             sudo systemctl restart apache2
