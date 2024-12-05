@@ -30,17 +30,26 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Update the server and install necessary packages
             sudo apt-get -y update
-            sudo apt-get install -y apache2 python3 python3-pip
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            # Move only necessary files, e.g., app folder and static files
-            # sudo mv /home/your_app_folder/* /var/www/html
-            # sudo chown -R www-data:www-data /var/www/html
-            # cd /var/www/html
+            sudo apt-get install -y apache2 python3 python3-pip python3-venv
+
+            # Set up the virtual environment for Flask
+            cd /var/www/html
+            python3 -m venv venv
+            source venv/bin/activate
+
+            # Install the necessary Python packages (including Flask)
             if [ -f "requirements.txt" ]; then
-              sudo pip3 install -r requirements.txt || { echo "pip install failed"; exit 1; }
+              pip install -r requirements.txt
             else
-              echo "No requirements.txt found, skipping pip install."
+              echo "Flask==2.0.3" > requirements.txt
+              pip install -r requirements.txt
             fi
 
+            # Start the Flask application (run in background)
+            nohup flask run --host=0.0.0.0 --port=80 > flask.log 2>&1 &
+
+            # Ensure Apache is running
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
