@@ -25,7 +25,7 @@ jobs:
       # Copy files to EC2 server
       - name: Deploy Flask app to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_SSH_KEY }}@${{ secrets.HOST_DNS }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} << 'EOF'
             # Update and install necessary packages
             sudo apt-get update -y
             sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-wsgi-py3
