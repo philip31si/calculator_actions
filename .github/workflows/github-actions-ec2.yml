@@ -35,9 +35,9 @@ jobs:
             sudo systemctl start apache2
             sudo systemctl enable apache2
             # Move only necessary files, e.g., app folder and static files
-            sudo mv /home/your_app_folder/* /var/www/html
-            sudo chown -R www-data:www-data /var/www/html
-            cd /var/www/html
+            # sudo mv /home/your_app_folder/* /var/www/html
+            # sudo chown -R www-data:www-data /var/www/html
+            # cd /var/www/html
             if [ -f "requirements.txt" ]; then
               sudo pip3 install -r requirements.txt || { echo "pip install failed"; exit 1; }
             else
