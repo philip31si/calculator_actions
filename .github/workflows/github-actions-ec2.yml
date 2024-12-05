@@ -31,25 +31,35 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Update the server and install necessary packages
+            echo "Starting server update and installing dependencies..."
             sudo apt-get -y update
             sudo apt-get install -y apache2 python3 python3-pip python3-venv
+            echo "Dependencies installed."
 
             # Set up the virtual environment for Flask
             cd /var/www/html
+            echo "Creating virtual environment..."
             python3 -m venv venv
             source venv/bin/activate
+            echo "Virtual environment activated."
 
             # Install the necessary Python packages (including Flask)
             if [ -f "requirements.txt" ]; then
+              echo "Installing from requirements.txt..."
               pip install -r requirements.txt
             else
+              echo "requirements.txt not found, installing Flask."
               echo "Flask==2.0.3" > requirements.txt
               pip install -r requirements.txt
             fi
 
             # Start the Flask application (run in background)
+            echo "Starting Flask app..."
             nohup flask run --host=0.0.0.0 --port=80 > flask.log 2>&1 &
+            echo "Flask app started."
 
             # Ensure Apache is running
+            echo "Starting Apache service..."
             sudo systemctl start apache2
             sudo systemctl enable apache2
+            echo "Apache service started."
