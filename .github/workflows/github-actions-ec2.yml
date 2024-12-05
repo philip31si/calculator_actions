@@ -37,7 +37,7 @@ jobs:
             cd /home
             sudo mv * /var/www/html
             cd /var/www/html
-            if [ -f "requirements.txt" ]; then
-              sudo pip3 install -r requirements.txt
+            #if [ -f "requirements.txt" ]; then
+              #sudo pip3 install -r requirements.txt
             fi
 
