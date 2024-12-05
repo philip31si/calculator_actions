@@ -1,61 +1,55 @@
-name: Push-to-EC2
+name: Deploy Flask App to EC2
 
-# Trigger deployment only on push to main branch
+# Trigger deployment only on push to the main branch
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   deploy:
-    name: Deploy to EC2 on main branch push
+    name: Deploy to EC2 on master branch push
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
-      - name: Checkout the files
+      # Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      # Deploy to EC2 using SSH
-      - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
-
-      # Run commands to set up Flask on EC2
-      - name: Setup Flask app on EC2
-        uses: appleboy/ssh-action@master
+      # Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          host: ${{ secrets.HOST_DNS }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # Update the server and install necessary dependencies
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      # Copy files to EC2 server
+      - name: Deploy Flask app to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_SSH_KEY }}@${{ secrets.HOST_DNS }} << 'EOF'
+            # Update and install necessary packages
             sudo apt-get update -y
-            # sudo apt-get install -y apache2 python3 python3-pip python3-venv
+            sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-wsgi-py3
 
-            # Navigate to the web directory
-            # cd /var/www/html
+            # Navigate to the app directory
+            cd /var/www/html
 
-            # Set up a Python virtual environment
-            # python3 -m venv venv
-            # source venv/bin/activate
+            # Remove any old files and copy new ones from GitHub repository
+            sudo rm -rf *
+            git clone https://github.com/${{ github.repository }} /var/www/html
 
-            # Install Flask and any other dependencies (ensure requirements.txt exists)
+            # Install dependencies
             if [ -f "requirements.txt" ]; then
-              pip install -r requirements.txt
-            else
-              # If requirements.txt doesn't exist, install Flask directly
-              echo "Flask==2.0.3" > requirements.txt
-              pip install -r requirements.txt
+              sudo pip3 install -r requirements.txt
             fi
 
-            # Start the Flask application (running on port 80)
-            nohup flask run --host=0.0.0.0 --port=80 > flask.log 2>&1 &
+            # Restart Apache to apply changes
+            sudo systemctl restart apache2
+          EOF
 
-            # Ensure Apache is running
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
+      # Verify deployment (Optional)
+      #- name: Verify Flask app is running
+        #run: |
+          #ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.HOST_DNS }} << 'EOF'
+            #curl -f http://localhost:80 || exit 1
+          #EOF
+
