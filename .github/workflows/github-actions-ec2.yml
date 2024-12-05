@@ -8,14 +8,14 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 on master branch push
+    name: Deploy to EC2 on main branch push
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Deploy to Server 1
+      - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -34,10 +34,13 @@ jobs:
             sudo apt-get install -y apache2 python3 python3-pip
             sudo systemctl start apache2
             sudo systemctl enable apache2
-            cd /home
-            sudo mv * /var/www/html
+            # Move only necessary files, e.g., app folder and static files
+            sudo mv /home/your_app_folder/* /var/www/html
+            sudo chown -R www-data:www-data /var/www/html
             cd /var/www/html
-            #if [ -f "requirements.txt" ]; then
-              #sudo pip3 install -r requirements.txt
+            if [ -f "requirements.txt" ]; then
+              sudo pip3 install -r requirements.txt || { echo "pip install failed"; exit 1; }
+            else
+              echo "No requirements.txt found, skipping pip install."
             fi
 
