@@ -1,6 +1,6 @@
-name: Deploy Flask App to EC2
+name: Push-to-EC2
 
-# Trigger deployment only on push to the main branch
+# Trigger deployment only on push to main branch
 on:
   push:
     branches:
@@ -12,44 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout code
+      - name: Checkout the files
         uses: actions/checkout@v2
 
-      # Set up SSH
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Deploy to Server 1
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
-      # Copy files to EC2 server
-      - name: Deploy Flask app to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST_DNS }} << 'EOF'
-            # Update and install necessary packages
-            sudo apt-get update -y
-            sudo apt-get install -y python3 python3-pip apache2 libapache2-mod-wsgi-py3
-
-            # Navigate to the app directory
-            cd /var/www/html
-
-            # Remove any old files and copy new ones from GitHub repository
-            sudo rm -rf *
-            git clone https://github.com/${{ github.repository }} /var/www/html
-
-            # Install dependencies
-            if [ -f "requirements.txt" ]; then
-              sudo pip3 install -r requirements.txt
-            fi
-
-            # Restart Apache to apply changes
-            sudo systemctl restart apache2
-          EOF
-
-      # Verify deployment (Optional)
-      #- name: Verify Flask app is running
-        #run: |
-          #ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.HOST_DNS }} << 'EOF'
-            #curl -f http://localhost:80 || exit 1
-          #EOF
-
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt-get -y update
+            sudo apt-get install -y apache2
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            cd home
+            sudo mv * /var/www/html
