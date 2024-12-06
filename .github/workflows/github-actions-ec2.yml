@@ -34,9 +34,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo yum update -y
-            sudo yum install -y python3 python3-pip
-            sudo yum groupinstall -y "Development Tools"
+            sudo yum install -y python3 python3-pip gcc libffi-devel python3-devel
             cd ${{ secrets.TARGET_DIR }}
             pip3 install -r requirements.txt
-            nohup gunicorn --bind 0.0.0.0:8080 app:app > gunicorn.log 2>&1 &
+            nohup gunicorn --bind 0.0.0.0:5000 app:app > gunicorn.log 2>&1 &
 
