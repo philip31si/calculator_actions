@@ -39,4 +39,6 @@ jobs:
             pip3 install -r requirements.txt
             # Ensure Flask server is accessible publicly
             export FLASK_APP=app.py
-            nohup flask run --host=0.0.0.0 --port=5000 &
+            
+            nohup flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+
