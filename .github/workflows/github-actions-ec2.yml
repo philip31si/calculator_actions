@@ -35,10 +35,8 @@ jobs:
           script: |
             sudo yum update -y
             sudo yum install -y python3 python3-pip
+            sudo yum groupinstall -y "Development Tools"
             cd ${{ secrets.TARGET_DIR }}
             pip3 install -r requirements.txt
-            # Ensure Flask server is accessible publicly
-            export FLASK_APP=app.py
-            
-            nohup flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+            nohup gunicorn --bind 0.0.0.0:5000 app:app > gunicorn.log 2>&1 &
 
