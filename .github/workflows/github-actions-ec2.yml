@@ -33,9 +33,20 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Update system and install required packages
             sudo yum update -y
             sudo yum install -y python3 python3-pip gcc libffi-devel python3-devel
+
+            # Navigate to the deployment directory
             cd ${{ secrets.TARGET_DIR }}
+
+            # Install application dependencies
             pip3 install -r requirements.txt
-            nohup gunicorn --bind 0.0.0.0:8080 app:app > gunicorn.log 2>&1 &
+
+            # Stop any existing Gunicorn processes on the same port (optional)
+            sudo pkill -f "gunicorn" || true
+
+            # Run the application in the background using Gunicorn
+            nohup gunicorn --workers 3 --bind 0.0.0.0:8080 app:app > gunicorn.log 2>&1 &
+
 
