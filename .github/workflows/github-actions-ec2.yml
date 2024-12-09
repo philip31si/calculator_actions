@@ -44,7 +44,7 @@ jobs:
             pip3 install -r requirements.txt
 
             # Stop any existing Gunicorn processes on the same port (optional)
-            sudo pkill -f "gunicorn" || true
+            #sudo pkill -f "gunicorn" || true
 
             # Run the application in the background using Gunicorn
             nohup gunicorn --workers 3 --bind 0.0.0.0:8080 app:app > gunicorn.log 2>&1 &
